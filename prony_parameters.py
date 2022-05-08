@@ -18,6 +18,7 @@ def clear_all(start_time,interval,step,stop_time,n_start,n_stop,n_step,
     freq_limit.delete(0, 'end')
     dr_limit.delete(0, 'end')
 
+
 def import_parameters(start_time,interval,step,stop_time,n_start,n_stop,n_step,
                        n_break_criteria,amp_limit_ratio,freq_limit,dr_limit):
     csv_name = tk.filedialog.askopenfilename(
@@ -43,6 +44,7 @@ def import_parameters(start_time,interval,step,stop_time,n_start,n_stop,n_step,
     freq_limit.insert(0, parameters[9])
     dr_limit.insert(0, parameters[10])
 
+
 def save_parameters(start_time,interval,step,stop_time,n_start,n_stop,n_step,
                        n_break_criteria,amp_limit_ratio,freq_limit,dr_limit):
     prony_parameters = np.array([start_time.get(),interval.get(),step.get(),
@@ -52,6 +54,8 @@ def save_parameters(start_time,interval,step,stop_time,n_start,n_stop,n_step,
     print(prony_parameters)
     np.savetxt('prony_parameters.csv', prony_parameters, delimiter=',')
 
+
+# default parameters can be adjusted here
 def default_parameters(start_time,interval,step,stop_time,n_start,n_stop,n_step,
                        n_break_criteria,amp_limit_ratio,freq_limit,dr_limit):
 

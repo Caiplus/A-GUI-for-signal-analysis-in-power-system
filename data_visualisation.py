@@ -5,8 +5,8 @@ from matplotlib.backend_bases import key_press_handler
 import tkinter as tk
 
 
-def plot_comp(figure,plot_subframe,ax,df,t,comp_var,meas_var):
-    
+def plot_comp(figure,plot_subframe,ax,df,t,comp_var,meas_var,info_label_plot,info_frame):
+        
     ax.plot(t.to_numpy(dtype=float), df[comp_var.get()][meas_var.get()].to_numpy(dtype=float),label=meas_var.get())
     ax.set_ylabel(meas_var.get(), fontsize=12)
 
@@ -28,8 +28,15 @@ def plot_comp(figure,plot_subframe,ax,df,t,comp_var,meas_var):
         key_press_handler(event, canvas, toolbar)
     
     canvas.mpl_connect("key_press_event", on_key_press)
+    
+    info_label_plot.destroy()
+    info_label_analysis = tk.Label(info_frame, 
+                          text='Choose "prony analysis" or "basic data analysis')
+    info_label_analysis.pack()
 
         
-def clear_plot(plot_subframe):
+def clear_plot(plot_subframe,ax):
     for widget in plot_subframe.winfo_children():
         widget.destroy()
+
+    ax.clear()
