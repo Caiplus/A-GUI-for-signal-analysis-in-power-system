@@ -78,7 +78,7 @@ ax = figure.add_subplot(111)
 
 
 clear = tk.Button(plot_frame, text='Clear',
-                  command=lambda: data_visualisation.clear_plot(plot_subframe,figure,ax))
+                  command=lambda: data_visualisation.clear_plot(plot_subframe,ax))
 clear.grid(row=0, column=0, padx=5, pady=5, sticky='nw')
 
 
