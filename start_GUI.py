@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 root = tk.Tk()
 root.title('Signal Analysis')
 # root.resizable(False,False)
-root.geometry('1250x650')
+root.geometry('1300x700')
 
 # data_frame
     
@@ -45,6 +45,12 @@ def readcsv():
     comp_drop = tk.OptionMenu(data_frame, comp_var, *comp_list,
                               command=meas_drop)
     comp_drop.grid(row=1, column=0, padx=5, pady=5, sticky='w')
+    
+    global info_label_plot
+    info_label.destroy()
+    info_label_plot = tk.Label(info_frame, 
+                          text='After choosing component and measurement, click "plot"')
+    info_label_plot.pack()
  
     
 import_data = tk.Button(data_frame, text='Import data',command=readcsv)
@@ -55,7 +61,8 @@ import data_visualisation
 
 plot_data = tk.Button(data_frame, text='Plot',
                       command=lambda: data_visualisation.plot_comp(
-                          figure,plot_subframe,ax,df,t,comp_var,meas_var))
+                          figure,plot_subframe,ax,df,t,comp_var,meas_var,
+                          info_label_plot,info_frame))
 plot_data.grid(row=3, column=0, padx=5, pady=5, sticky='w')
 
 
@@ -64,22 +71,22 @@ plot_frame = tk.LabelFrame(root, text='Plot', padx=10, pady=10)
 plot_frame.grid(row=0, column=1, rowspan=2, padx=10, pady=10, sticky='nw')
 
 plot_subframe = tk.LabelFrame(plot_frame, text='', padx=1, pady=1)
-plot_subframe.grid(row=0, column=0, padx=5, pady=5, sticky='nw')
+plot_subframe.grid(row=1, column=0, padx=5, pady=5, sticky='nw')
 
 figure = plt.Figure(figsize=(8,5))
 ax = figure.add_subplot(111)
 
 
 clear = tk.Button(plot_frame, text='Clear',
-                  command=lambda: data_visualisation.clear_plot(plot_subframe))
-clear.grid(row=1, column=0, padx=5, pady=5, sticky='nw')
+                  command=lambda: data_visualisation.clear_plot(plot_subframe,ax))
+clear.grid(row=0, column=0, padx=5, pady=5, sticky='nw')
 
 
 # prony_analysis_frame
 prony_analysis_frame = tk.LabelFrame(root, text='Prony Analysis', padx=10, pady=10)
 prony_analysis_frame.grid(row=1, column=0, padx=10, pady=10, sticky='nw')
 
-## time winodw sliding
+## time window sliding
 tk.Label(prony_analysis_frame, text='Time windows sliding:').grid(
     row=0, column=0, sticky='w')
 
@@ -209,47 +216,25 @@ from multiple_analysis import readcsv_mlt, mlt_comp_dyn, mlt_comp_trans, mlt_com
 mlt_frame = tk.LabelFrame(bsc_frame, text='Multiple Components analysis', padx=10, pady=10)
 mlt_frame.grid(row=8, column=0, rowspan=3, padx=5, pady=5, sticky='nw')
 
-msg1 = tk.Label(mlt_frame, text='1. Choose 1 file to analyse 1 measurements \nin all its components. ')
+msg1 = tk.Label(mlt_frame, text='1. Choose 1 file to analyse 1 \nmeasurement in all its components: ', anchor='w')
 msg1.grid(row=0, column=0, sticky='w')
 
 import_data_s = tk.Button(mlt_frame, text='Import data',command= lambda: readcsv_mlt(mlt_frame))
-import_data_s.grid(row=1, column=0, padx=5, pady=5, sticky='w')
+import_data_s.grid(row=0, column=1, padx=5, pady=5, sticky='w')
 
-msg2 = tk.Label(mlt_frame, text='2. Choose type of analysis')
-msg2.grid(row=3, column=0, sticky='w')
+msg2 = tk.Label(mlt_frame, text='OR Choose multiple files to analyse \n1 measurement in all distances: ', anchor='w')
+msg2.grid(row=1, column=0, sticky='w')
 
-mlt_dyn_btn = tk.Button(mlt_frame, text='Dynamic performance indices', command= lambda: mlt_comp_dyn(mlt_frame))
-mlt_dyn_btn.grid(row=4, column=0, sticky='nw')
-
-window_b_mlt = tk.Label(mlt_frame, text='start analyse transience part \nfrom around time point [s]: ')#set start time for transient analysis
-window_b_mlt.grid(row=5, column=0, sticky='w')
-s_mlt = tk.Entry(mlt_frame)
-s_mlt.grid(row=6, column=0, sticky='w')
-window_e_mlt = tk.Label(mlt_frame, text='end at around time point [s]: ')#set start time for transient analysis
-window_e_mlt.grid(row=7, column=0, sticky='w')
-e_mlt = tk.Entry(mlt_frame)
-e_mlt.grid(row=8, column=0, sticky='w')
-
-mlt_trans_btn = tk.Button(mlt_frame, text='Transience part analysis', command= lambda: mlt_comp_trans(mlt_frame, s_mlt, e_mlt))
-mlt_trans_btn.grid(row=9, column=0, sticky='nw')
-mlt_osci_btn = tk.Button(mlt_frame, text='Oscillation part analysis', command= lambda: mlt_comp_osci(mlt_frame, s_mlt, e_mlt))
-mlt_osci_btn.grid(row=10, column=0, sticky='nw')
-# FFT_analysis
-# FFT_frame = tk.LabelFrame(root, text='FFT Analysis', padx=10, pady=10)
-# FFT_frame.grid(row=2, column=0, padx=10, pady=10, sticky='nw')
-
-# from FFT_analysis import FFT_open
-    
-# FFT_btn = tk.Button(FFT_frame, text='FFT_analysis', command= lambda: FFT_open(ax,df,comp_var,meas_var))
-# FFT_btn.grid(row=0, column=0, sticky='nw')
-
-
+from multiple_analysis_2 import readcsv_mlt_dist
+import_data_m = tk.Button(mlt_frame, text='Import multiple files',command= lambda: readcsv_mlt_dist(mlt_frame))
+import_data_m.grid(row=1, column=1, padx=5, pady=5, sticky='w')
 
 # info_frame
 info_frame = tk.LabelFrame(root, text='Info/Hint', padx=10, pady=10)
 info_frame.grid(row=3, column=0, columnspan=2, padx=5, pady=5, sticky='w')
 
-tk.Label(info_frame, text='import data').pack()
+info_label = tk.Label(info_frame, text='Import data')
+info_label.pack()
 
 
 # end of GUI--------

@@ -6,6 +6,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 def save_fig(title, figure):
     figure.savefig(title + '.png')
 
+def clear_comparison(ax1,canvas):
+    ax1.clear()
+    canvas.draw()
+
 def plot_prony_compare(ax1,canvas):
     filename = tk.filedialog.askopenfilename(
     initialdir='/', title='Select A File',
@@ -20,6 +24,7 @@ def plot_prony_compare(ax1,canvas):
         label.append(i)
     label = label[::-1][:-4]
     print(''.join(label))
+    ax1.set_title('Comparison between data', fontsize=14)
     ax1.scatter(modes[:,1], modes[:,2], label=''.join(label))
     ax1.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
     ax1.set_xlabel('Damping', fontsize=12)
@@ -43,9 +48,12 @@ def compare(root):
       
     canvas = FigureCanvasTkAgg(figure, comp_gui)  # A tk.DrawingArea.
     canvas.draw()
-    canvas.get_tk_widget().grid(row=1, column=0, columnspan=2, sticky='w')
+    canvas.get_tk_widget().grid(row=1, column=0, columnspan=3, sticky='w')
     
     title = 'Comparison between data'
     tk.Button(comp_gui, text='save as figure',
                             command=lambda:save_fig(title, figure)).grid(
                                 row=0, column=1, padx=5, pady=5, sticky='e')
+                                
+    tk.Button(comp_gui, text='Clear',command=lambda:clear_comparison(ax1,canvas)).grid(
+                            row=0, column=2, padx=5, pady=5, sticky='e')                            

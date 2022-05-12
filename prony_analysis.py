@@ -14,6 +14,10 @@ def save_fig(title, figure_p):
 def save_csv(title, modes):
     np.savetxt(f'{title}.csv', modes, delimiter=',', header='mode,damping_ratio,frequency')
 
+def clear_after_clustering(ax2,canvas):
+    ax2.clear()
+    canvas.draw()
+
 class T_win:
     def __init__(self, t_i, y, t, interval,
                  n_start,n_stop,n_step,n_break_criteria,amp_limit_ratio,freq_limit,dr_limit,
@@ -21,9 +25,7 @@ class T_win:
         
         self.t_win = t.iloc[t_i:t_i+interval].to_numpy(dtype=float)
         self.y_k = y.iloc[t_i:t_i+interval].to_numpy(dtype=float)
-        
-    # def prony_n(self, n_start,n_stop,n_step,n_break_criteria,amp_limit_ratio,freq_limit):
-        
+                
         for n in range(n_start,n_stop,n_step):
         
             # Apply prony analysis
@@ -67,19 +69,7 @@ class T_win:
             
             if self.MSE <= n_break_criteria:
                 break
-    
         
-        # # plot prony fitting for the time window
-        # plt.figure(column_index)
-        # plt.plot(self.t_win, self.y_k, label=f'original data, {t_i/1000}')
-        # plt.plot(self.t_win, self.y_est, linestyle='dashed', label=f'n={n}\nMSE={self.MSE}')
-        # plt.plot(self.t_win, self.y_hl, linestyle='dotted', 
-        #           label=f'After hard limit\nn={self.n_hl}\nMSE={self.MSE_hl}')
-        # plt.xlabel('t', fontsize=12)
-        # plt.ylabel('y(t)', fontsize=12)    
-        # plt.title(f'Time window: {t_i} - {t_i+interval}', fontsize=16) 
-        # plt.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
-    
     # def t_win_plot(self, scrollable_frame):
         self.figure_p = plt.Figure(figsize=(5,3))
         self.ax = self.figure_p.add_subplot(111) 
@@ -171,6 +161,7 @@ def run_cluster(eps, min_samples, ax2, canvas, prony_gui, checkbox_list, var_cho
         modes = np.append(modes,[mode_i], axis=0)
     
     # scatter plot for damping and freq distribution after clustering
+    ax2.set_title('After Clustering', fontsize=14)
     ax2.scatter(cluster[:,0], cluster[:,1], c=colors, marker="o", picker=True)
     ax2.scatter(modes[:,0], modes[:,1], marker='x', color='#000000')
     ax2.set_xlabel('Damping ratio', fontsize=12)
@@ -187,16 +178,17 @@ def run_cluster(eps, min_samples, ax2, canvas, prony_gui, checkbox_list, var_cho
     for row in modes:
         print(' '.join(map(lambda x: "{:.3f}\t".format(x), row)))
 
-    print(modes)
-
     # save results
     tk.Button(prony_gui, text='save as figure',command= lambda: save_fig(
         title, figure_p)).grid(row=2, column=3, sticky='w')
     
     tk.Button(prony_gui, text='save modes as csv', command=lambda: save_csv(
         title, modes)).grid(row=3, column=3, sticky='w')
-
-
+    
+    # clear after clustering plot
+    tk.Button(prony_gui, text='Clear', command=lambda: clear_after_clustering(
+        ax2,canvas)).grid(row=3, column=2, sticky='w')
+    
 
 def run_prony(root, start_time, interval, step, stop_time,
           n_start, n_stop, n_step, n_break_criteria,
@@ -245,7 +237,6 @@ def run_prony(root, start_time, interval, step, stop_time,
     ax1 = figure_p.add_subplot(121)       # freq-damping scatter plot
     ax1.set_title('Before Clustering', fontsize=14)
     ax2 = figure_p.add_subplot(122)       # after clustering scatter plot
-    ax2.set_title('After Clustering', fontsize=14)
       
     canvas = FigureCanvasTkAgg(figure_p, prony_gui)  # A tk.DrawingArea.
     canvas.draw()
