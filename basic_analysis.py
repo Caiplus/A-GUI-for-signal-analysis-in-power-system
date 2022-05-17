@@ -1,5 +1,6 @@
 import numpy as np
 import tkinter as tk
+from tkinter.filedialog import asksaveasfile
 from tkinter import ttk
 from matplotlib import pyplot as plt
 from scipy import signal
@@ -11,22 +12,23 @@ from matplotlib.colors import LogNorm, Normalize
 import csv
 
 def dyn_analysis(df,comp_var,meas_var,bsc_frame,ax):
-    dyn_top = tk.Toplevel()
-    dyn_top.title('Multiple dynamic performance indices')
+    dyn_top = tk.Toplevel()#open new window for result
+    dyn_top.title('Dynamic performance indices')
     
-    t = df.iloc[:,-1].to_numpy(dtype=float)
-    y = df[comp_var.get()][meas_var.get()].to_numpy(dtype=float)
+    t = df.iloc[:,-1].to_numpy(dtype=float)#change column of time values to numpy array
+    y = df[comp_var.get()][meas_var.get()].to_numpy(dtype=float)#change column with goal values to numpy array
     
-    steady_state = y[-1]
-    max_value = np.max(y)
-    t_max = t[y.argmax()]
-    min_value = np.min(y)
-    t_min = t[y.argmin()]
-    yr = y[y.argmin()+1:]
-    t_rise = t[np.where(yr>steady_state)[0][0]+y.argmin()+1]
-    y_rise = y[np.where(yr>steady_state)[0][0]+y.argmin()+1]
+    steady_state = y[-1]#set the last value as steady state
+    max_value = np.max(y)#find max value
+    t_max = t[y.argmax()]#find time point of max value
+    min_value = np.min(y)#find min value
+    t_min = t[y.argmin()]#find time point of min value
+    yr = y[y.argmin()+1:]#select the part after reaching the min value
+    t_rise = t[np.where(yr>steady_state)[0][0]+y.argmin()+1]#find rise time on selected part
+    y_rise = y[np.where(yr>steady_state)[0][0]+y.argmin()+1]#find value at rise time on selected part
+    osr = (max_value-steady_state)/steady_state#calculate overshoot ratio
     
-    results_frame = tk.LabelFrame(dyn_top, text='', padx=10, pady=10)
+    results_frame = tk.LabelFrame(dyn_top, text='', padx=10, pady=10)#frame for showing results
     results_frame.grid(row=0, column=0, padx=10, pady=10, sticky='nw')
             
     results_title = tk.Label(results_frame, text='Dynamic performance indices:', font=('bold',12, "underline"))
@@ -35,23 +37,45 @@ def dyn_analysis(df,comp_var,meas_var,bsc_frame,ax):
                              'steady state= '+f'{steady_state}'+
                              '\nt_rise= '+f"{'%.3f' % t_rise}"+
                              '\nt_max= '+f"{'%.3f' % t_max}"+', max= '+f'{max_value}'+
-                             '\nt_min= '+f"{'%.3f' % float(t_min)}"+', min= '+f"{min_value}"+
-                             "\nResults are saved in csv file")
-    results_label.grid(row=1, column=0, sticky='w')
+                             '\nt_min= '+f"{'%.3f' % float(t_min)}"+', min= '+f"{min_value}"+ 
+                             '\nOvershoot Ratio='+f"{'%.3f' % osr}"
+                             )
+    results_label.grid(row=1, column=0, sticky='w')#just show results with 3 decimal places
     
-    ax.plot(t[-1], y[-1], 'o')
-    ax.plot(t_max, max_value, 'o')
-    ax.plot(t_min, min_value, 'o')
-    ax.plot(t_rise, y_rise, 'o')
+    x_coordinates = [0, t[-1]]#plot line with steady state value
+    y_coordinates = [y[-1], y[-1]]
+    ax.plot(x_coordinates, y_coordinates, color='red', linestyle="--")
+    ax.text(t[-1], y[-1]+0.02, "Steady State")
+    ax.plot(t_max, max_value, 'o')#plot point with max value
+    ax.text(t_max, max_value+0.02, "max")
+    ax.plot(t_min, min_value, 'o')#plot point with min value
+    ax.text(t_min, min_value-0.02, "min")
+    ax.plot(t_rise, y_rise, 'o')#plot point at rise time
+    ax.text(t_rise-2, y_rise+0.02, "rise time")
+    ax.plot([t_max, t_max], [y[-1], max_value], color='green', linestyle="--")#plot where to calculate overshoot ratio
+    ax.plot([t_max, t_max], [0, y[-1]], color='black', linestyle="--")
+    ax.text(t_max+2, y[-1]-0.02, "Overshoot Ratio")
+    
+    dyn_btn = tk.Button(dyn_top, text="save as csv", command = lambda: dyn_SaveFile())
+    dyn_btn.grid(row=2, column=0, padx=10, pady=10, sticky='nw')
     
     #write data to csv file
-    dyn_data = [comp_var.get()+ meas_var.get()] + [steady_state, max_value, min_value, t_max, t_min, t_rise] 
-    header_dyn = ['', 'steady_state', 'max_value', 'min_value', 't_max (s)', 't_min (s)', 't_rise (s)']
-    
-    with open('Dynamic performance indices.csv', 'w', newline='') as dyn:
-        writer = csv.writer(dyn)
-        writer.writerow(header_dyn)
-        writer.writerow(dyn_data)
+    def dyn_SaveFile():
+        data = [("csv file(*.csv)","*.csv"),('All tyes(*.*)', '*.*')]
+        dyn_file = tk.filedialog.asksaveasfilename(filetypes = data, defaultextension = data, 
+                                                  initialfile = 'Dynamic performance indices.csv')
+        # file will have file name provided by user.
+        # Now we can use this file name to save file.
+        dyn_data = [comp_var.get()+ meas_var.get()] + [steady_state, max_value, 
+                                                   min_value, t_max, t_min, t_rise, osr] 
+        header_dyn = ['', 'steady_state', 'max_value', 'min_value', 't_max (s)', 't_min (s)', 
+                      't_rise (s)', 'Overshoot Ratio']
+        
+        with open(dyn_file, 'w', newline='') as dyn:
+            writer = csv.writer(dyn)
+            writer.writerow(header_dyn)
+            writer.writerow(dyn_data)
+
 
 def trans(df,s,e,comp_var,meas_var):
     trans_top = tk.Toplevel()
@@ -60,7 +84,7 @@ def trans(df,s,e,comp_var,meas_var):
     trans_frame = tk.LabelFrame(trans_top, text='', padx=10, pady=10)
     trans_frame.grid(row=0, column=0, padx=10, pady=10, sticky='nw')
     
-    trs_btn = tk.Button(trans_top, text='save as csv', command = lambda: trans_csv())
+    trs_btn = tk.Button(trans_top, text="save as csv", command = lambda: trans_SaveFile())
     trs_btn.grid(row=1, column=0, padx=10, pady=10, sticky='nw')
     
     t = df.iloc[:,-1].to_numpy(dtype=float)
@@ -115,12 +139,18 @@ def trans(df,s,e,comp_var,meas_var):
         key_press_handler(event, canvas, toolbar)
     
     canvas.mpl_connect("key_press_event", on_key_press)
-    
-    def trans_csv():#write data to csv file
+
+    #write data to csv file
+    def trans_SaveFile():
+        data = [("csv file(*.csv)","*.csv"),('All tyes(*.*)', '*.*')]
+        trans_file = tk.filedialog.asksaveasfilename(filetypes = data, defaultextension = data, 
+                                                  initialfile = 'Transient parameters.csv')
+        # file will have file name provided by user.
+        # Now we can use this file name to save file.
         trs_data = [comp_var.get()+ meas_var.get()] + [td, tu, yd, yu, k, Ar] 
         header_trs = ['', 't1 (s)', 't2 (s)', 'yd', 'yu', 'Slope', 'Area']
-        
-        with open('Transient parameters.csv', 'w', newline='') as trs:
+       
+        with open(trans_file, 'w', newline='') as trs:
             writer = csv.writer(trs)
             writer.writerow(header_trs)
             writer.writerow(trs_data)
@@ -138,7 +168,8 @@ def osci(df,comp_var,meas_var):
     osci_frame = tk.LabelFrame(plot_frame, text='', padx=10, pady=10)
     osci_frame.grid(row=0, column=0, padx=10, pady=10, sticky='nw')
     
-    osci_btn = tk.Button(area_frame, text='save as csv', command = lambda: osci_csv())
+    osci_btn = tk.Button(area_frame, text="save as 'Oscillation Analysis.csv'", 
+                         command = lambda: osci_SaveFile())
     osci_btn.grid(row=0, column=0, padx=10, pady=10, sticky='nw')
        
     t = df.iloc[:,-1].to_numpy(dtype=float)
@@ -187,15 +218,20 @@ def osci(df,comp_var,meas_var):
         #Area_result.grid.pack()
         ax.fill_between(x2[n:m+1], g2[n:m+1], y2[n:m+1], color = "yellow", alpha = 0.2, hatch = '|')
         ax.text((x2[n]+x2[m])/2, g-0.001, f'A{i}')
-        #ax.text(x2[idx[-1]], g-0.001, f'P{len(idx)-1}')
             
     Area_arr = np.array(Area_list)        
-    #print(Area_arr)
-    def osci_csv():#write data to csv file
+    
+    #write data to csv file
+    def osci_SaveFile():
+        data = [("csv file(*.csv)","*.csv"),('All tyes(*.*)', '*.*')]
+        osci_file = tk.filedialog.asksaveasfilename(filetypes = data, defaultextension = data, 
+                                                  initialfile = 'Oscillation parameters.csv')
+        # file will have file name provided by user.
+        # Now we can use this file name to save file.
         osci_data = [comp_var.get()+ meas_var.get()] + [*Area_list]
         header_osci = ['Area'] + list(range(100))
         
-        with open('Oscillation parameters.csv', 'w', newline='') as osci:
+        with open(osci_file, 'w', newline='') as osci:
             writer = csv.writer(osci)
             writer.writerow(header_osci)
             writer.writerow(osci_data)
