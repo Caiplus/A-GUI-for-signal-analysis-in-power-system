@@ -213,13 +213,13 @@ dyn_btn.grid(row=0, column=0, sticky='nw')
 
 # multiple_analysis_frame
 from multiple_analysis import readcsv_mlt, mlt_comp_dyn, mlt_comp_trans, mlt_comp_osci
-mlt_frame = tk.LabelFrame(bsc_frame, text='Multiple Components analysis', padx=10, pady=10)
+mlt_frame = tk.LabelFrame(bsc_frame, text='Multiple analysis', padx=10, pady=10)
 mlt_frame.grid(row=8, column=0, rowspan=3, padx=5, pady=5, sticky='nw')
 
 msg1 = tk.Label(mlt_frame, text='1. Choose 1 file to analyse 1 \nmeasurement in all its components: ', anchor='w')
 msg1.grid(row=0, column=0, sticky='w')
 
-import_data_s = tk.Button(mlt_frame, text='Import data',command= lambda: readcsv_mlt(mlt_frame))
+import_data_s = tk.Button(mlt_frame, text='Import 1 file',command= lambda: readcsv_mlt(mlt_frame))
 import_data_s.grid(row=0, column=1, padx=5, pady=5, sticky='w')
 
 msg2 = tk.Label(mlt_frame, text='OR Choose multiple files to analyse \n1 measurement in all distances: ', anchor='w')
