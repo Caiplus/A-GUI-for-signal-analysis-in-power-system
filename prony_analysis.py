@@ -9,10 +9,16 @@ from scipy.linalg import toeplitz
 from sklearn.cluster import DBSCAN
 
 def save_fig(title, figure_p):
-    figure_p.savefig(title + '.png')
+    data = [("jpg file(.jpg)",".jpg"),("png file(.png)",".png"),('All tyes(.)', '.')]
+    fig_file = tk.filedialog.asksaveasfilename(filetypes = data, defaultextension = data, 
+                                                  initialfile = f'{title}.jpg')
+    figure_p.savefig(fig_file)
 
 def save_csv(title, modes):
-    np.savetxt(f'{title}.csv', modes, delimiter=',', header='mode,damping_ratio,frequency')
+    data = [("csv file(.csv)",".csv"),('All tyes(.)', '.')]
+    csv_file = tk.filedialog.asksaveasfilename(filetypes = data, defaultextension = data, 
+                                                  initialfile = f'{title}.csv')
+    np.savetxt(csv_file, modes, delimiter=',', header='mode,damping_ratio,frequency')
 
 def clear_after_clustering(ax2,canvas):
     ax2.clear()
