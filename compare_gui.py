@@ -4,7 +4,10 @@ from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 def save_fig(title, figure):
-    figure.savefig(title + '.png')
+    data = [("jpg file(.jpg)",".jpg"),("png file(.png)",".png"),('All tyes(.)', '.')]
+    fig_file = tk.filedialog.asksaveasfilename(filetypes = data, defaultextension = data, 
+                                                  initialfile = f'{title}.jpg')
+    figure.savefig(fig_file)
 
 def clear_comparison(ax1,canvas):
     ax1.clear()
