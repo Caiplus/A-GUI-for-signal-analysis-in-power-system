@@ -24,7 +24,7 @@ def dyn_analysis(df,comp_var,meas_var,bsc_frame,ax):
     min_value = np.min(y)#find min value
     t_min = t[y.argmin()]#find time point of min value
     yr = y[y.argmin()+1:]#select the part after reaching the min value
-    t_rise = t[np.where(yr>steady_state)[0][0]+y.argmin()+1]#find rise time on selected part
+    t_rise = t[np.where(yr>steady_state)[0][0]+y.argmin()+1]-50#find rise time on selected part
     y_rise = y[np.where(yr>steady_state)[0][0]+y.argmin()+1]#find value at rise time on selected part
     osr = (max_value-steady_state)/steady_state#calculate overshoot ratio
     
@@ -50,8 +50,8 @@ def dyn_analysis(df,comp_var,meas_var,bsc_frame,ax):
     ax.text(t_max, max_value+0.02, "max")
     ax.plot(t_min, min_value, 'o')#plot point with min value
     ax.text(t_min, min_value-0.02, "min")
-    ax.plot(t_rise, y_rise, 'o')#plot point at rise time
-    ax.text(t_rise-2, y_rise+0.02, "rise time")
+    ax.plot(t_rise+50, y_rise, 'o')#plot point at rise time
+    ax.text(t_rise+50-2, y_rise+0.02, "rise time")
     ax.plot([t_max, t_max], [y[-1], max_value], color='green', linestyle="--")#plot where to calculate overshoot ratio
     ax.plot([t_max, t_max], [0, y[-1]], color='black', linestyle="--")
     ax.text(t_max+2, y[-1]-0.02, "Overshoot Ratio")
@@ -79,7 +79,7 @@ def dyn_analysis(df,comp_var,meas_var,bsc_frame,ax):
 
 def trans(df,s,e,comp_var,meas_var):
     trans_top = tk.Toplevel()
-    trans_top.title('Transience Analysis')
+    trans_top.title('Transient Analysis')
     
     trans_frame = tk.LabelFrame(trans_top, text='', padx=10, pady=10)
     trans_frame.grid(row=0, column=0, padx=10, pady=10, sticky='nw')
@@ -168,7 +168,7 @@ def osci(df,comp_var,meas_var):
     osci_frame = tk.LabelFrame(plot_frame, text='', padx=10, pady=10)
     osci_frame.grid(row=0, column=0, padx=10, pady=10, sticky='nw')
     
-    osci_btn = tk.Button(area_frame, text="save as 'Oscillation Analysis.csv'", 
+    osci_btn = tk.Button(area_frame, text="save as csv", 
                          command = lambda: osci_SaveFile())
     osci_btn.grid(row=0, column=0, padx=10, pady=10, sticky='nw')
        
@@ -176,7 +176,6 @@ def osci(df,comp_var,meas_var):
     y = df[comp_var.get()][meas_var.get()].to_numpy(dtype=float)
     
     #define where Oscillation part starts (tb), ends (te)
-    #re_min_y = y[signal.argrelextrema(y, np.less)]
     nadir_ind = signal.argrelextrema(y,np.less)[0]
     tb = np.max(nadir_ind)
     te = len(y)
@@ -206,7 +205,7 @@ def osci(df,comp_var,meas_var):
     ax.plot(x2[idx], y2[idx], 'ro')
     
     Area_list = []
-    for i in range(len(idx)-1):
+    for i in range(len(idx)-1):#loop for calculating areas
         n = idx[i]
         m = idx[i+1]
         ya = np.sum(y2[n:m+1])*(x2[m]-x2[n])/(m-n+1)
@@ -214,12 +213,14 @@ def osci(df,comp_var,meas_var):
         Area = abs(ya-ga)
         Area_list.append(Area)
         Area_result = tk.Label(area_frame, text=f"Area{i} = ({'%.3e' % Area})")
-        Area_result.grid(row=int(f'{i}')+1, column=1, sticky='w')
-        #Area_result.grid.pack()
+        Area_result.grid(row=int(f'{i}')+2, column=1, sticky='w')
         ax.fill_between(x2[n:m+1], g2[n:m+1], y2[n:m+1], color = "yellow", alpha = 0.2, hatch = '|')
         ax.text((x2[n]+x2[m])/2, g-0.001, f'A{i}')
             
-    Area_arr = np.array(Area_list)        
+    Area_arr = np.array(Area_list)
+    ar_sum = np.sum(Area_list)
+    Area_sum = tk.Label(area_frame, text=f"Areas sum = ({'%.3e' % ar_sum})")
+    Area_sum.grid(row=1, column=1, sticky='w')         
     
     #write data to csv file
     def osci_SaveFile():
@@ -228,8 +229,8 @@ def osci(df,comp_var,meas_var):
                                                   initialfile = 'Oscillation parameters.csv')
         # file will have file name provided by user.
         # Now we can use this file name to save file.
-        osci_data = [comp_var.get()+ meas_var.get()] + [*Area_list]
-        header_osci = ['Area'] + list(range(100))
+        osci_data = [comp_var.get()+ meas_var.get()] + [ar_sum] + [*Area_list]
+        header_osci = ['Area'] + ['sum'] + list(range(len(Area_list)))
         
         with open(osci_file, 'w', newline='') as osci:
             writer = csv.writer(osci)

@@ -23,7 +23,7 @@ def options(mlt_frame):#the options of analysis
     mlt_dyn_btn = tk.Button(mlt_frame, text='Dynamic performance indices', command= lambda: mlt_comp_dyn(mlt_frame))
     mlt_dyn_btn.grid(row=4, column=0, sticky='nw')
     
-    window_b_mlt = tk.Label(mlt_frame, text='start analyse transience part \nfrom around time point [s]: ')#set start time for transient analysis
+    window_b_mlt = tk.Label(mlt_frame, text='start analyse transient part \nfrom around time point [s]: ')#set start time for transient analysis
     window_b_mlt.grid(row=5, column=0, sticky='w')
     s_mlt = tk.Entry(mlt_frame)
     s_mlt.grid(row=6, column=0, sticky='w')
@@ -32,7 +32,7 @@ def options(mlt_frame):#the options of analysis
     e_mlt = tk.Entry(mlt_frame)
     e_mlt.grid(row=8, column=0, sticky='w')
     
-    mlt_trans_btn = tk.Button(mlt_frame, text='Transience part analysis', command= lambda: mlt_comp_trans(mlt_frame, s_mlt, e_mlt))
+    mlt_trans_btn = tk.Button(mlt_frame, text='Transient part analysis', command= lambda: mlt_comp_trans(mlt_frame, s_mlt, e_mlt))
     mlt_trans_btn.grid(row=9, column=0, sticky='nw')
     mlt_osci_btn = tk.Button(mlt_frame, text='Oscillation part analysis', command= lambda: mlt_comp_osci(mlt_frame, s_mlt, e_mlt))
     mlt_osci_btn.grid(row=10, column=0, sticky='nw')
@@ -92,7 +92,7 @@ def mlt_comp_dyn(mlt_frame):
             min_value = np.min(y)#find min value
             t_min = t[y.argmin()]#find time point of min value
             yr = y[y.argmin()+1:]#select the part after reaching the min value
-            t_rise = t[np.where(yr>steady_state)[0][0]+y.argmin()+1]#find rise time on selected part
+            t_rise = t[np.where(yr>steady_state)[0][0]+y.argmin()+1]-50#find rise time on selected part
             osr = (max_value-steady_state)/steady_state#calculate overshoot ratio
             
             #for heat_map
@@ -166,7 +166,7 @@ def mlt_comp_dyn(mlt_frame):
     
 def mlt_comp_trans(mlt_frame, s_mlt, e_mlt):
     mlt_trans_top = tk.Toplevel()
-    mlt_trans_top.title('Multiple Transience Analysis')
+    mlt_trans_top.title('Multiple Transient Analysis')
     
     trs_list = []
     hm_t_list = []
@@ -273,6 +273,7 @@ def mlt_comp_osci(mlt_frame, s_mlt, e_mlt):
     mlt_osci_top.title('Multiple Oscillation Analysis')
     
     osci_list = []
+    Area_len = []
     for column in range(len(df.columns)):
         if df.iloc[1,column] == meas_var.get():
             comp = df.iloc[0,column]
@@ -292,7 +293,6 @@ def mlt_comp_osci(mlt_frame, s_mlt, e_mlt):
             idx = np.argwhere(np.diff(np.sign(y2 - g2))).flatten()#idx: relative indexes of intersections
             
             Area_list = []
-            Area_len = []
             for i in range(len(idx)-1):
                 n = idx[i]
                 m = idx[i+1]
@@ -301,14 +301,15 @@ def mlt_comp_osci(mlt_frame, s_mlt, e_mlt):
                 Area = abs(ya-ga)
                 Area_list.append(Area)
                 Area_len.append(len(Area_list))
-            osci_data = [comp] + [*Area_list]
+            ar_sum = np.sum(Area_list)
+            osci_data = [comp] + [ar_sum] + [*Area_list]
             osci_list.append(osci_data)
     #write the header according to number of areas
     name_list = []
-    n_ar = np.max(Area_len)+1
+    n_ar = np.max(Area_len)
     for n in range(n_ar):
         name_list.append('Area'+str(n))        
-    header_osci = [f'{meas_var.get()}'] + name_list
+    header_osci = [f'{meas_var.get()}'] + ['Sum'] + name_list
 
     #write data to csv file
     osci_btn = tk.Button(mlt_osci_top, text="save as csv", 

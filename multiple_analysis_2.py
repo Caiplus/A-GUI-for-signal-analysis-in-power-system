@@ -25,7 +25,7 @@ def options(mlt_frame):#the options of analysis
     mlt_dyn_btn.grid(row=4, column=0, sticky='nw')
     
     window_b_mlt = tk.Label(mlt_frame, 
-                            text='start analyse transience part \nfrom around time point [s]: ')#set start time for transient analysis
+                            text='start analyse transient part \nfrom around time point [s]: ')#set start time for transient analysis
     window_b_mlt.grid(row=5, column=0, sticky='w')
     s_mlt = tk.Entry(mlt_frame)
     s_mlt.grid(row=6, column=0, sticky='w')
@@ -35,7 +35,7 @@ def options(mlt_frame):#the options of analysis
     e_mlt = tk.Entry(mlt_frame)
     e_mlt.grid(row=8, column=0, sticky='w')
     
-    mlt_trans_btn = tk.Button(mlt_frame, text='Transience part analysis', 
+    mlt_trans_btn = tk.Button(mlt_frame, text='Transient part analysis', 
                               command= lambda: mlt_dist_trans(mlt_frame, s_mlt, e_mlt))
     mlt_trans_btn.grid(row=9, column=0, sticky='nw')
     mlt_osci_btn = tk.Button(mlt_frame, text='Oscillation part analysis', 
@@ -117,7 +117,7 @@ def mlt_dist_dyn(mlt_frame):
                 min_val = np.min(y)#find min value
                 t_min = t[y.argmin()]#find time point of min value
                 yr = y[y.argmin()+1:]#select the part after reaching the min value
-                t_rise = t[np.where(yr>steady_state)[0][0]+y.argmin()+1]#find rise time on selected part
+                t_rise = t[np.where(yr>steady_state)[0][0]+y.argmin()+1]-50#find rise time on selected part
                 osr = (max_val-steady_state)/steady_state#calculate overshoot ratio
                 
                 bus_list.append(comp)
@@ -199,7 +199,7 @@ def mlt_dist_dyn(mlt_frame):
     
 def mlt_dist_trans(mlt_frame, s_mlt, e_mlt):
     trs_dist_top = tk.Toplevel()
-    trs_dist_top.title('Multiple Transience Analysis')
+    trs_dist_top.title('Multiple Transient Analysis')
 
     #loop for different files (distance)
     trs_dist_list=[]
@@ -349,7 +349,6 @@ def mlt_dist_osci(mlt_frame, s_mlt, e_mlt):
             dist = f'file{n}'
             
         #loop for different bus
-        #osci_list = []
         for column in range(len(df.columns)):
             if df.iloc[1,column] == meas_var.get():
                 comp = df.iloc[0,column]
@@ -370,7 +369,6 @@ def mlt_dist_osci(mlt_frame, s_mlt, e_mlt):
                 idx = np.argwhere(np.diff(np.sign(y2 - g2))).flatten()#idx: relative indexes of intersections
                 
                 Area_list = []
-                #Area_len = []
                 for i in range(len(idx)-1):
                     n = idx[i]
                     m = idx[i+1]
@@ -379,14 +377,15 @@ def mlt_dist_osci(mlt_frame, s_mlt, e_mlt):
                     Area = abs(ya-ga)
                     Area_list.append(Area)
                     Area_len.append(len(Area_list))
-                osci_data = [dist+' '+comp] + [*Area_list]
+                ar_sum = np.sum(Area_list)
+                osci_data = [dist+' '+comp] + [ar_sum] + [*Area_list]
                 osci_list.append(osci_data)
     #write the header according to number of areas
-    n_ar = np.max(Area_len)+1
+    n_ar = np.max(Area_len)
     name_list = []
     for n in range(n_ar):
         name_list.append('Area'+str(n))        
-    header_osci = [f'{meas_var.get()}'] + name_list
+    header_osci = [f'{meas_var.get()}'] + ['Sum'] + name_list
     #write data to csv file
     osci_btn = tk.Button(osci_dist_top, text="save as csv", 
                          command = lambda: osci_SaveFile())
@@ -415,7 +414,7 @@ def mlt_dist_osci(mlt_frame, s_mlt, e_mlt):
     hm_osci = pd.read_csv('osci_mlt.csv',index_col=0)
     
     figure, ax = plt.subplots(figsize=(12,6))
-    ax = sns.heatmap(hm_osci, norm=LogNorm())
+    ax = sns.heatmap(hm_osci, vmin=0, norm=LogNorm())
     
     canvas = FigureCanvasTkAgg(figure, hm_osci_frame)  # A tk.DrawingArea.
     canvas.draw()
